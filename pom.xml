@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.com.dpapworth</groupId>
+    <artifactId>tomcat6-plugin-example</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.source.version>1.7</java.source.version>
+        <java.target.version>1.7</java.target.version>
+
+        <tomcat.version>6.0.35</tomcat.version>
+        <tomcat.port>8080</tomcat.port>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.6.6</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Set Java version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
+                </configuration>
+            </plugin>
+
+            <!-- Create server.xml file to be used by tomcat6-maven-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>create-server-xml</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- Replace separators in classpath, as the VirtualWebappLoader expects ; as separators -->
+                                <property name="runtime.classpath" refid="maven.runtime.classpath" />
+                                <loadresource property="webapp.classpath">
+                                    <propertyresource name="runtime.classpath" />
+                                    <filterchain>
+                                        <tokenfilter>
+                                            <replacestring from=":" to=";" />
+                                        </tokenfilter>
+                                    </filterchain>
+                                </loadresource>
+                                <!-- Replace tokens in source server.xml -->
+                                <copy file="${basedir}/src/main/tomcat-conf/server.xml" todir="${basedir}/target/tomcat-conf" />
+                                <replace file="${basedir}/target/tomcat-conf/server.xml">
+                                    <replacefilter token="@port@" value="${tomcat.port}" />
+                                    <replacefilter token="@basedir@" value="${basedir}" />
+                                    <replacefilter token="@webapp.classpath@" value="${webapp.classpath}" />
+                                </replace>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat6-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <serverXml>${basedir}/target/tomcat-conf/server.xml</serverXml>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

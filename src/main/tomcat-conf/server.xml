@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Server port="-1" shutdown="SHUTDOWN">
+    <Service name="Catalina">
+        <Connector port="@port@" protocol="HTTP/1.1" />
+        <Engine name="Catalina" defaultHost="localhost">
+            <Host name="localhost" appBase="webapps">
+                <Context docBase="@basedir@/src/main/webapp" path="/">
+                    <Loader className="org.apache.catalina.loader.VirtualWebappLoader" virtualClasspath="@webapp.classpath@" />
+                </Context>
+                <!-- Map src/main/javascript to /js path -->
+                <Context docBase="@basedir@/src/main/javascript" path="/js" />
+            </Host>
+
+            <!-- Allow x-forwarded-for header to override remote IP address -->
+            <!-- Assumes IPv4 is being used. (Add -Djava.net.preferIPv4Stack=true to MAVEN_OPTS) -->
+            <Valve className="org.apache.catalina.valves.RemoteIpValve" />
+        </Engine>
+    </Service>
+</Server>
